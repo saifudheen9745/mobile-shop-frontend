@@ -13,8 +13,9 @@ function Sidebar() {
   const sidebarItems = [
     { id: 1, name: 'Dashboard', link: '/dashboard', icon: <LayoutDashboard size={18} /> },
     { id: 2, name: 'Products', link: '/dashboard/products', icon: <Smartphone size={18} /> },
-    { id: 3, name: 'Sales', link: '/dashboard/sales', icon: <Receipt size={18} /> },
-    { id: 4, name: 'Reports', link: '/dashboard/reports', icon: <BarChart3 size={18} /> },
+    { id: 3, name: 'Categories', link: '/dashboard/categories', icon: <BarChart3 size={18} /> },
+    { id: 4, name: 'Sales', link: '/dashboard/sales', icon: <Receipt size={18} /> },
+    { id: 5, name: 'Reports', link: '/dashboard/reports', icon: <BarChart3 size={18} /> },
   ];
 
   const handleLogout = () => {

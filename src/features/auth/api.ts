@@ -1,5 +1,7 @@
 import { api } from "@/lib/api";
 
+//Authenticaton Apis
+
 export function login(payload: { email: string; password: string }) {
   return api("/auth/login", {
     method: "POST",

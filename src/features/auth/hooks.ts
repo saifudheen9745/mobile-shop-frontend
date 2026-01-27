@@ -12,3 +12,4 @@ export function useLogout() {
     mutationFn: logout
   })
 }
+
