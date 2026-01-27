@@ -15,6 +15,8 @@ export const authController = {
             const response = {
                 email: user.email,
                 id: user.id,
+                name: user.name,
+                phone: user.phone
             }
             res.status(200).json({message: "Login successful", response});
         } catch (error) {
@@ -23,8 +25,8 @@ export const authController = {
     },
     registerController: async (req:Request, res:Response) => {
         try {
-            const {email, password} = req.body;
-            const user = await authService.registerService({email, password});
+            const {email, password, name, phone} = req.body;
+            const user = await authService.registerService({email, password, name, phone});
             res.status(200).json({message: "Registration successful"});
         } catch (error) {
             res.status(400).json({message: (error as Error).message});

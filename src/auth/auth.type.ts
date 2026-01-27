@@ -1,4 +1,11 @@
-export interface IAuthPayload {
+export interface IRegisterPayload {
+    email:String,
+    name:String,
+    phone:String,
+    password:String
+}
+
+export interface ILoginPayload {
     email:String,
     password:String
 }
@@ -11,5 +18,6 @@ export interface IJwtPayload {
 export interface IAuthResponse {
     id:String,
     email:String,
-    tokan:String,
+    name:String,
+    phone:String,
 }

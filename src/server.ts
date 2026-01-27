@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./config/db.js";
 import authRouter from "./auth/auth.route.js";
+import categoryRouter from "./categories/categories.routes.js";
+import productRouter from "./products/product.routes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -16,6 +18,8 @@ app.use(cors({
 app.use(cookieParser());
 
 app.use("/auth", authRouter);
+app.use("/categories", categoryRouter)
+app.use("/products", productRouter)
 
 app.get("/", (req, res) => {
   res.send("Backend ESM + TS working!");
