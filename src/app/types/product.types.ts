@@ -7,6 +7,7 @@ export interface IProduct {
   actualPrice: number;
   sellingPrice: number;
   description:string;
+  quantity:number;
   isUsedProduct: boolean;
   attributes?: Record<string, any>;
 }
@@ -21,5 +22,6 @@ export interface ProductPayload {
   sellingPrice: number;
   description:string;
   isUsedProduct: boolean;
+  quantity:number;
   attributes?: Record<string, any>;
 }

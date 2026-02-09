@@ -4,3 +4,4 @@ export interface IAuthState {
   email: string;
   phone: string
 }
+

@@ -12,6 +12,7 @@ interface SideDrawerProps {
   children: ReactNode;
   container?: HTMLElement | null;
   overlay?: boolean;
+  closeFn: (val:boolean) => void;
 }
 
 export function SideDrawer({
@@ -20,7 +21,8 @@ export function SideDrawer({
   title,
   children,
   container,
-  overlay = true
+  overlay = true,
+  closeFn
 }: SideDrawerProps) {
 
   return (
@@ -52,7 +54,7 @@ export function SideDrawer({
                   <div className="flex items-center justify-between p-4 border-b border-slate-100">
                     <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
                     <Dialog.Close asChild>
-                      <button className="p-2 hover:bg-slate-100 rounded-full transition">
+                      <button className="p-2 hover:bg-slate-100 rounded-full transition" onClick={() => closeFn(false)}>
                         <X className="w-5 h-5" />
                       </button>
                     </Dialog.Close>

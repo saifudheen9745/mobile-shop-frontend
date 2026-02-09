@@ -138,7 +138,7 @@ const CategoryDashboard = () => {
                         <span className="text-sm font-medium text-slate-400">{index + 1}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-mono text-[10px] font-semibold text-cyan-600 bg-cyan-50 px-2 py-1 rounded tracking-tighter">
+                        <span className="font-mono text-[12px] font-semibold text-cyan-600 bg-cyan-50 px-2 py-1 rounded tracking-tighter">
                           {category._id}
                         </span>
                       </td>
@@ -172,6 +172,7 @@ const CategoryDashboard = () => {
               title="Create New Category"
               container={container}
               overlay={true}
+              closeFn={(val:boolean) => setOpen(val)}
             >
               <form onSubmit={handleSubmit} className="flex flex-col h-full justify-between">
                 <div className="flex-1 space-y-6">

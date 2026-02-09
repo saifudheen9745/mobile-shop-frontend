@@ -16,6 +16,7 @@ import {
 
 import { useFetchCategories } from "@/features/category/hooks";
 import type { IProduct } from "@/app/types/product.types";
+import { adjustProductsByCart } from "@/lib/utils";
 
 const ProductDashboard = () => {
   const { data: products } = useFetchProducts();
@@ -41,6 +42,7 @@ const ProductDashboard = () => {
     sellingPrice: "",
     description: "",
     isUsedProduct: false,
+    quantity:"",
     attributes: {
       storage: "",
       ram: "",
@@ -71,6 +73,7 @@ const ProductDashboard = () => {
       sellingPrice: "",
       description: "",
       isUsedProduct: false,
+      quantity:"",
       attributes: {
         storage: "",
         ram: "",
@@ -96,6 +99,7 @@ const ProductDashboard = () => {
       sellingPrice: product.sellingPrice.toString(),
       description: product.description || "",
       isUsedProduct: product.isUsedProduct || false,
+      quantity:product.quantity.toString(),
       attributes: {
         storage: product.attributes?.storage || "",
         ram: product.attributes?.ram || "",
@@ -129,6 +133,7 @@ const ProductDashboard = () => {
       sellingPrice: Number(formData.sellingPrice),
       description: formData.description,
       isUsedProduct: formData.isUsedProduct,
+      quantity:parseInt(formData.quantity),
       attributes: formData.attributes,
     };
 
@@ -222,6 +227,9 @@ const ProductDashboard = () => {
             Price
           </th>
           <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+            Quantity
+          </th>
+          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
             Is Used
           </th>
           <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400 text-right">
@@ -259,7 +267,10 @@ const ProductDashboard = () => {
                 ₹{Number(p.actualPrice).toLocaleString('en-IN')}
               </span>
             </td>
-             <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+            <td className="px-6 py-4 text-sm text-slate-600 font-medium text-center">
+              {p.quantity}
+            </td>
+             <td className="px-6 py-4 text-sm text-slate-600 font-medium text-center">
               {p.attributes?.isUsedProduct ? "Yes" : "No"}
             </td>
             <td className="px-6 py-4">
@@ -283,10 +294,11 @@ const ProductDashboard = () => {
             title={editMode ? "Update Product" : "Create Product"}
             container={container}
             overlay
+              closeFn={(val:boolean) => setOpen(val)}
           >
             <form
               onSubmit={handleSubmit}
-              className="flex flex-col h-full justify-between space-y-6 "
+              className="flex flex-col h-full justify-between space-y-6 max-w-xl"
             >
               <div className="flex-1 overflow-y-auto pr-2 space-y-5 pt-2">
                 {/* Category */}
@@ -421,6 +433,25 @@ const ProductDashboard = () => {
                       className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
                     />
                   </div>
+
+                  <div className="space-y-1 flex-1">
+                    <label className="text-sm font-medium text-slate-700">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="Qty"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          quantity: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
+                    />
+                  </div>
                 </div>
 
                 {/* Mobile-specific fields */}
@@ -472,7 +503,7 @@ const ProductDashboard = () => {
                     </div>
 
                     {/* IMEIs */}
-                    <div className="flex gap-3">
+                    {/* <div className="flex gap-3">
                       <div className="space-y-1 flex-1">
                         <label className="text-sm font-medium text-slate-700">
                           IMEI 1
@@ -512,7 +543,7 @@ const ProductDashboard = () => {
                           className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
                         />
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* Color */}
                     <div className="space-y-1">
