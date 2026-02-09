@@ -27,6 +27,10 @@ export const productService = {
       throw new Error("Product category is required");
     }
 
+    if(!data.quantity || data.quantity <= 0) {
+      throw new Error("Product quantity must be a positive number");
+    }
+
     if (typeof data.actualPrice !== "number" || data.actualPrice <= 0) {
       throw new Error("Actual price must be a positive number");
     }
@@ -35,19 +39,17 @@ export const productService = {
       throw new Error("Selling price must be a positive number");
     }
 
-    // --- Optional domain rule ---
-    if (data.sellingPrice < data.actualPrice) {
-      throw new Error("Selling price cannot be lower than actual price");
-    }
 
     const product = new Product({
       name: data.name.trim(),
       model: data.model.trim(),
       category: data.category.trim(),
-        company: data.company.trim(),
-        isUsedProduct: data.isUsedProduct ?? false,
+      company: data.company.trim(),
+      quantity: data.quantity,
       actualPrice: data.actualPrice,
       sellingPrice: data.sellingPrice,
+      isUsedProduct: data.isUsedProduct ?? false,
+      description: data.description,
       attributes: data.attributes ?? {},
     });
 
@@ -108,6 +110,10 @@ export const productService = {
 
     if(typeof data.description !== "undefined") {
       product.description = data.description;
+    }
+
+    if(typeof data.quantity != "undefined"){
+      product.quantity = data.quantity;
     }
 
     // --- PATCH: attributes (dynamic) ---

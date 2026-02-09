@@ -6,6 +6,7 @@ export interface ProductPayload {
   actualPrice?: number;
   sellingPrice?: number;
   isUsedProduct?: boolean;
+  quantity?: number;
   description?: string;
   attributes?: Record<string, any>;
 }
