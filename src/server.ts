@@ -6,7 +6,10 @@ import authRouter from "./auth/auth.route.js";
 import categoryRouter from "./categories/categories.routes.js";
 import productRouter from "./products/product.routes.js";
 import purchaseRouter from "./purchase/purchase.routes.js"
-import dashboardRoutes from "./dashboard/dashboard.routes.js";
+import dashboardRouter from "./dashboard/dashboard.routes.js";
+import expenseRouter from "./expense/expense.routes.js"
+import employeeRouter from "./employee/employee.routes.js"
+import vendorRouter from "./vendor/vendor.routes.js"
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 
@@ -25,7 +28,11 @@ app.use("/auth", authRouter);
 app.use("/categories", categoryRouter)
 app.use("/products", productRouter)
 app.use("/purchase", purchaseRouter)
-app.use("/dashboard", dashboardRoutes);
+app.use("/dashboard", dashboardRouter);
+app.use("/vendors", vendorRouter);
+app.use("/employees", employeeRouter);
+app.use("/expenses", expenseRouter);
+
 
 app.get("/", (req, res) => {
   res.send("Backend ESM + TS working!");

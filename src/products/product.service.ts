@@ -98,9 +98,6 @@ export const productService = {
     // --- PATCH: sellingPrice ---
     if (typeof data.sellingPrice !== "undefined") {
       if (data.sellingPrice <= 0) throw new Error("Selling price must be positive");
-      if (product.actualPrice && data.sellingPrice < product.actualPrice) {
-        throw new Error("Selling price cannot be lower than actual price");
-      }
       product.sellingPrice = data.sellingPrice;
     }
     // --- PATCH: isUsedProduct ---

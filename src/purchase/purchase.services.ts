@@ -7,10 +7,7 @@ import productModel from "../products/product.model.js";
 import { PurchaseModel } from "./purchase.models.js";
 import { generateInvoiceNumber } from "./invoice.utils.js";
 
-
-export const createPurchase = async (
-  payload: CreatePurchaseInput
-) => {
+export const createPurchase = async (payload: CreatePurchaseInput) => {
   const session = await mongoose.startSession();
 
   try {
@@ -19,6 +16,8 @@ export const createPurchase = async (
     if (!payload) throw new Error("Payload is missing");
 
     const { user, phone, products, paymentMethod } = payload;
+
+    console.log(payload)
 
     if (!user || !phone) {
       throw new Error("User and phone are required");
@@ -32,10 +31,7 @@ export const createPurchase = async (
     const purchaseProducts: IPurchaseProduct[] = [];
 
     for (const item of products) {
-      if (
-        !item.productId ||
-        !mongoose.Types.ObjectId.isValid(item.productId)
-      ) {
+      if (!item.productId || !mongoose.Types.ObjectId.isValid(item.productId)) {
         throw new Error("Invalid product id");
       }
 
@@ -75,14 +71,31 @@ export const createPurchase = async (
           status: "COMPLETED",
         },
       ],
-      { session }
+      { session },
     );
 
+    // for (const item of products) {
+    //   await productModel.findByIdAndUpdate(
+    //     item.productId,
+    //     { $inc: { quantity: -item.quantity } },
+    //     { session }
+    //   );
+    // }
+
     for (const item of products) {
-      await productModel.findByIdAndUpdate(
-        item.productId,
-        { $inc: { quantity: -item.quantity } },
-        { session }
+      await productModel.updateOne(
+        {
+          _id: item.productId,
+          "attributes.availableImeis.imei": item.imei,
+          "attributes.availableImeis.isSold": false,
+        },
+        {
+          $inc: { quantity: -item.quantity },
+          $set: {
+            "attributes.availableImeis.$.isSold": true,
+          },
+        },
+        { session },
       );
     }
 

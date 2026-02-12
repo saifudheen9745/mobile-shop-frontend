@@ -6,6 +6,7 @@ const PurchaseProductSchema = new Schema(
     productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     name: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1 },
+    imei: {type:String, requrired:false},
     sellingPrice: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
   },

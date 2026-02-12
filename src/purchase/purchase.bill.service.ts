@@ -150,7 +150,7 @@ export const generatePurchaseBillPDF = (
   purchase: IPurchaseDocument
 ): PDFKit.PDFDocument => {
   const doc = new PDFDocument({
-    size: "A5",
+    size: "A4",
     margin: 30,
   });
 
