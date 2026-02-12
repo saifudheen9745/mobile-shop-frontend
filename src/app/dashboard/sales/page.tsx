@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   Search,
   ShoppingCart,
@@ -42,6 +42,7 @@ import { ICart, ICartContent, ICartProduct } from "@/app/types/cat.types";
 import { adjustProductsByCart } from "@/lib/utils";
 import { useCreatePurchase } from "@/features/purchase/hooks";
 import { CreatePurchaseInput } from "@/app/types/purchase.types";
+import { ImeiItem } from "@/app/types/dialog.types";
 
 const Sales = () => {
   const { data: products } = useFetchProducts();
@@ -63,6 +64,7 @@ const Sales = () => {
   const [openCreateCartDrawer, setOpenCreateCartDrawer] = useState(false);
   const [openShoppingCartDrawer, setOpenShoppingCartDrawer] = useState(false);
   const [openSelectedCartDrawer, setOpenSelectedCartDrawer] = useState(false);
+  const [openImeiListDrawer, setOpenImeiListDrawer] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selected, setSelected] = useState<IProduct | null>(null);
 
@@ -244,12 +246,18 @@ const Sales = () => {
     reduxDispatch(deleteCart(cartId));
   };
 
-  const addToCartFn = (product: IProduct & { availableQuantity: number }) => {
+  const addToCartFn = (product: IProduct & { availableQuantity?: number }, imei?:string) => {
     if (product.availableQuantity === 0) {
+      return;
+    }
+    if (!openImeiListDrawer) {
+      setSelected(product)
+      setOpenImeiListDrawer(true);
       return;
     }
     if (carts.length === 0) {
       setOpenCreateCartDrawer(true);
+      return;
     }
     const cartItem: ICartProduct = {
       _id: product._id,
@@ -257,6 +265,7 @@ const Sales = () => {
       quantity: 1,
       sellingPrice: product.sellingPrice,
       total: product.sellingPrice,
+      imei:imei
     };
     reduxDispatch(addToCart({ product: cartItem }));
   };
@@ -275,7 +284,7 @@ const Sales = () => {
     reduxDispatch(updateProductQty({ productId: product._id, qty }));
   };
 
-  const doPurcase = () => {
+  const doPurchase = () => {
     const cartDetails = carts.filter((c) => c.id === selectedCart)[0];
     const purchaseObj: CreatePurchaseInput = {
       user: cartDetails.user,
@@ -283,18 +292,37 @@ const Sales = () => {
       products: cartDetails.products.map((p) => ({
         productId: p._id, // or p.productId if that's the key in cart
         quantity: p.quantity,
+        imei: p.imei
       })),
       paymentMethod: "CASH",
     };
 
-    createPurchase(purchaseObj,{
+    createPurchase(purchaseObj, {
       onSuccess: () => {
-         deleteCartFn(selectedCart);
-         queryClient.invalidateQueries({ queryKey: ["purchase"] });
-         setOpenSelectedCartDrawer(false);
-      }
+        deleteCartFn(selectedCart);
+        queryClient.invalidateQueries({ queryKey: ["purchase"] });
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+        setOpenSelectedCartDrawer(false);
+      },
     });
   };
+
+
+  const usedImeis = React.useMemo(() => {
+    const set = new Set<string>();
+
+    carts.forEach((cart) => {
+      console.log("carts = ",cart);
+      
+      cart.products.forEach((prod) => {
+        if (prod.imei) {
+          set.add(prod.imei);
+        }
+      });
+    });
+    console.log(set)
+    return set;
+  }, [carts]);
 
   return (
     <DrawerOverlayContainer>
@@ -367,7 +395,7 @@ const Sales = () => {
           <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative z-0 flex flex-col">
             <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
               <table className="w-full text-left border-separate border-spacing-0">
-                <thead className="sticky top-0 bg-white/80 backdrop-blur-md z-[5] border-b border-slate-100">
+                <thead className="sticky top-0 bg-white backdrop-blur-md z-[5] border-b border-slate-100">
                   <tr>
                     <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400 w-12 text-center">
                       #
@@ -444,7 +472,10 @@ const Sales = () => {
                       <td className="px-6 py-4 ">
                         <div className="flex justify-end items-center gap-1 ">
                           <button
-                            onClick={() => addToCartFn(p)}
+                            onClick={() => {
+                              setSelected(p)
+                              setOpenImeiListDrawer(true)
+                            }}
                             className="flex items-center justify-center  gap-2 bg-[#0F172A] cursor-pointer text-white px-3 py-3 rounded-xl hover:bg-slate-800 transition-all shadow-lg active:scale-50"
                           >
                             <ShoppingCart size={20} />
@@ -968,6 +999,84 @@ const Sales = () => {
             </div>
           </SideDrawer>
           <SideDrawer
+            open={openImeiListDrawer}
+            onOpenChange={(val) => setOpenImeiListDrawer(val)}
+            title="Available IMEI List"
+            container={container}
+            overlay={true}
+            closeFn={(val: boolean) => setOpenImeiListDrawer(val)}
+          >
+            <div className="p-2">
+              <div className="overflow-hidden border border-slate-200 rounded-lg">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
+                    <tr className="text-center">
+                      <th className="px-4 py-3">No</th>
+                      <th className="px-4 py-3">IMEI</th>
+                      <th className="px-4 py-3">Vendor</th>
+                      <th className="px-4 py-3">Payment Status</th>
+                      <th className="px-4 py-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {/* Mock Data - Map your real carts state here */}
+                    {selected &&
+                      selected?.attributes?.availableImeis
+                        .filter((imei: ImeiItem) => !usedImeis.has(imei.imei))
+
+                        .map((imei: ImeiItem, i: number) => (
+                          <tr
+                            key={i}
+                            className={`hover:bg-slate-50 transition-colors text-center`}
+                          >
+                            <td className="px-4 py-4">
+                              <div
+                                className={`font-mono px-2 py-1 rounded text-[12px] inline-block"}`}
+                              >
+                                {i + 1}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div
+                                className={`font-mono  px-2 py-1 rounded text-[12px] inline-block"}`}
+                              >
+                                {imei.imei}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className=" text-slate-800">
+                                {imei.vendor}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span className=" text-slate-800 ">
+                                {imei.paymentStatus}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 ">
+                              {imei.isSold ? <p className="bg-red-700 text-white rounded-lg p-2">Sold</p> : <div className="flex justify-end items-center gap-1 ">
+                                <button
+                                  onClick={() => addToCartFn(selected,imei.imei)}
+                                  className="flex items-center justify-center  gap-2 bg-[#0F172A] cursor-pointer text-white px-3 py-3 rounded-xl hover:bg-slate-800 transition-all shadow-lg active:scale-50"
+                                >
+                                  <ShoppingCart size={20} />
+                                </button>
+                              </div>}
+
+                            </td>
+                          </tr>
+                        ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Helper text for empty states */}
+              <p className="text-center text-slate-400 text-xs mt-6">
+                Showing all active carts
+              </p>
+            </div>
+          </SideDrawer>
+          <SideDrawer
             open={openSelectedCartDrawer}
             onOpenChange={(val) => {
               setOpenSelectedCartDrawer(val);
@@ -1116,7 +1225,7 @@ const Sales = () => {
                     </div>
                   </div>
                   <button
-                    onClick={doPurcase}
+                    onClick={doPurchase}
                     className="w-full bg-[#0f172a] text-white py-3 rounded-lg font-bold mt-4 hover:bg-slate-800 transition-all shadow-lg active:scale-[0.98]"
                   >
                     Complete Sale

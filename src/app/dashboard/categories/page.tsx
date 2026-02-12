@@ -99,22 +99,24 @@ const CategoryDashboard = () => {
           </div>
 
           {/* SEARCH */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search by category name or ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
-              />
-            </div>
-            <div className="h-10 w-[1px] bg-slate-200 mx-2" />
-            <p className="text-sm text-slate-500 font-medium whitespace-nowrap">
-              {filteredCategories?.length || 0} Categories Total
-            </p>
-          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-sm  flex gap-4 items-center mb-6">
+                      <div className="relative flex-1">
+                        <Search
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                          size={20}
+                        />
+                        <input
+                          placeholder="Search by name, model, or ID..."
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+          
+                      <p className="text-sm text-slate-500 whitespace-nowrap">
+                        {filteredCategories?.length || 0} Products Total
+                      </p>
+                    </div>
 
           {/* TABLE + DRAWER AREA */}
           <div className="flex-1 relative overflow-hidden bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col">

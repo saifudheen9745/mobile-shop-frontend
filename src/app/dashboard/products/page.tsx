@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Plus, Edit2, Trash2, Eye } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -17,6 +17,11 @@ import {
 import { useFetchCategories } from "@/features/category/hooks";
 import type { IProduct } from "@/app/types/product.types";
 import { adjustProductsByCart } from "@/lib/utils";
+import AddImeiDialog from "@/app/components/dialogs/add-imei";
+import { ImeiItem } from "@/app/types/dialog.types";
+
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const ProductDashboard = () => {
   const { data: products } = useFetchProducts();
@@ -27,11 +32,14 @@ const ProductDashboard = () => {
   const { mutate: deleteProduct } = useDeleteProduct();
 
   const queryClient = useQueryClient();
+    const { carts, selectedCart } = useSelector((state: RootState) => state.cart);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const [openAddImei, setOpenAddImei] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [selected, setSelected] = useState<IProduct | null>(null);
+  const [totalStockValue, setTotalStockValue] = useState(0);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -42,15 +50,16 @@ const ProductDashboard = () => {
     sellingPrice: "",
     description: "",
     isUsedProduct: false,
-    quantity:"",
+    quantity: "",
     attributes: {
       storage: "",
       ram: "",
       color: "",
+      batteryHealth: "",
+      address: "",
       purchasedFrom: "",
       purchaseDate: "",
-      imei1: "",
-      imei2: "",
+      availableImeis: [],
     },
   });
 
@@ -73,21 +82,25 @@ const ProductDashboard = () => {
       sellingPrice: "",
       description: "",
       isUsedProduct: false,
-      quantity:"",
+      quantity: "",
       attributes: {
         storage: "",
         ram: "",
         color: "",
         purchasedFrom: "",
         purchaseDate: "",
-        imei1: "",
-        imei2: "",
+        batteryHealth: "",
+        address: "",
+        availableImeis: [],
       },
     });
     setOpen(true);
   };
 
   const openEditDrawer = (product: IProduct) => {
+    console.log(product)
+    console.log(product.attributes);
+    
     setEditMode(true);
     setSelected(product);
     setFormData({
@@ -99,15 +112,16 @@ const ProductDashboard = () => {
       sellingPrice: product.sellingPrice.toString(),
       description: product.description || "",
       isUsedProduct: product.isUsedProduct || false,
-      quantity:product.quantity.toString(),
+      quantity: product.quantity.toString(),
       attributes: {
         storage: product.attributes?.storage || "",
         ram: product.attributes?.ram || "",
         color: product.attributes?.color || "",
         purchasedFrom: product.attributes?.purchasedFrom || "",
         purchaseDate: product.attributes?.purchaseDate || "",
-        imei1: product.attributes?.imei1 || "",
-        imei2: product.attributes?.imei2 || "",
+        batteryHealth: product.attributes?.batteryHealth || "",
+        address: product.attributes?.address || "",
+        availableImeis: product.attributes?.availableImeis || [],
       },
     });
     setOpen(true);
@@ -133,7 +147,7 @@ const ProductDashboard = () => {
       sellingPrice: Number(formData.sellingPrice),
       description: formData.description,
       isUsedProduct: formData.isUsedProduct,
-      quantity:parseInt(formData.quantity),
+      quantity: parseInt(formData.quantity),
       attributes: formData.attributes,
     };
 
@@ -157,6 +171,18 @@ const ProductDashboard = () => {
       },
     });
   };
+
+  const getImeidDetails = (data: ImeiItem[]) => {
+    setFormData({
+      ...formData,
+      attributes:{
+        ...formData.attributes,
+        availableImeis:data as any
+      }
+    })
+  };
+
+
 
   return (
     <DrawerOverlayContainer>
@@ -203,89 +229,107 @@ const ProductDashboard = () => {
           </div>
 
           {/* TABLE */}
-         <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative z-0 flex flex-col">
-  <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
-    <table className="w-full text-left border-separate border-spacing-0">
-      <thead className="sticky top-0 bg-white/80 backdrop-blur-md z-[5] border-b border-slate-100">
-        <tr>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400 w-12 text-center">
-            #
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Name
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Model
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Company
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Category
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Price
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Quantity
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
-            Is Used
-          </th>
-          <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400 text-right">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-50">
-        {filteredProducts?.map((p, i) => (
-          <tr key={p._id} className="group hover:bg-slate-50/50 transition-all duration-200">
-            <td className="px-6 py-4 text-center">
-              <span className="text-xs font-medium text-slate-400">{i + 1}</span>
-            </td>
-            <td className="px-6 py-4">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-slate-900 leading-tight">{p.name}</span>
-                
-              </div>
-            </td>
-            <td className="px-6 py-4">
-              <span className="text-sm font-medium text-slate-600 bg-slate-100/50 px-2 py-1 rounded-md">
-                {p.model}
-              </span>
-            </td>
-            <td className="px-6 py-4">
-              <span className="text-sm font-medium text-slate-600 bg-slate-100/50 px-2 py-1 rounded-md">
-                {p.company}
-              </span>
-            </td>
-            <td className="px-6 py-4 text-sm text-slate-600 font-medium">
-              {p.category}
-            </td>
-            <td className="px-6 py-4">
-              <span className="text-sm font-bold text-slate-800 tracking-tight">
-                ₹{Number(p.actualPrice).toLocaleString('en-IN')}
-              </span>
-            </td>
-            <td className="px-6 py-4 text-sm text-slate-600 font-medium text-center">
-              {p.quantity}
-            </td>
-             <td className="px-6 py-4 text-sm text-slate-600 font-medium text-center">
-              {p.attributes?.isUsedProduct ? "Yes" : "No"}
-            </td>
-            <td className="px-6 py-4">
-              <div className="flex justify-end items-center gap-1 ">
-                <button className="p-2 text-slate-400 hover:text-cyan-600"><Eye size={18} /></button>
-                <button onClick={() => openEditDrawer(p)} className="p-2 text-slate-400 hover:text-amber-600"><Edit2 size={18} /></button>
-                <button onClick={() => deleteProductFn(p._id)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 size={18} /></button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+          <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative z-0 flex flex-col">
+            <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+              <table className="w-full text-left border-separate border-spacing-0">
+                <thead className="sticky top-0 bg-white/80 backdrop-blur-md z-[5] border-b border-slate-100">
+                  <tr>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400 w-12 text-center">
+                      #
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Name
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Model
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Company
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Category
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Price
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Quantity
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+                      Is Used
+                    </th>
+                    <th className="px-6 py-5 text-[12px] font-bold uppercase tracking-widest text-slate-400 text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredProducts?.map((p, i) => (
+                    <tr
+                      key={p._id}
+                      className="group hover:bg-slate-50/50 transition-all duration-200"
+                    >
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-xs font-medium text-slate-400">
+                          {i + 1}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-slate-900 leading-tight">
+                            {p.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-slate-600 bg-slate-100/50 px-2 py-1 rounded-md">
+                          {p.model}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-slate-600 bg-slate-100/50 px-2 py-1 rounded-md">
+                          {p.company}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+                        {p.category}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-slate-800 tracking-tight">
+                          ₹{Number(p.actualPrice).toLocaleString("en-IN")}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600 font-medium text-center">
+                        {p.quantity}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600 font-medium text-center">
+                        {p.attributes?.isUsedProduct ? "Yes" : "No"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-end items-center gap-1 ">
+                          <button className="p-2 text-slate-400 hover:text-cyan-600">
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => openEditDrawer(p)}
+                            className="p-2 text-slate-400 hover:text-amber-600"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => deleteProductFn(p._id)}
+                            className="p-2 text-slate-400 hover:text-red-600"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {/* DRAWER */}
           <SideDrawer
@@ -294,7 +338,7 @@ const ProductDashboard = () => {
             title={editMode ? "Update Product" : "Create Product"}
             container={container}
             overlay
-              closeFn={(val:boolean) => setOpen(val)}
+            closeFn={(val: boolean) => setOpen(val)}
           >
             <form
               onSubmit={handleSubmit}
@@ -455,7 +499,7 @@ const ProductDashboard = () => {
                 </div>
 
                 {/* Mobile-specific fields */}
-                {formData.category.toLowerCase() === "mobile" && (
+                {formData.category.toLowerCase().includes("mobile") && (
                   <div className="space-y-3">
                     {/* Storage + RAM */}
                     <div className="flex gap-3">
@@ -570,42 +614,83 @@ const ProductDashboard = () => {
 
                 {/* Second hand fields */}
                 {formData.isUsedProduct && (
-                  <div className="flex gap-3">
-                    <div className="space-y-1 flex-1">
+                  <div>
+                    <div className="flex gap-3">
+                      <div className="space-y-1 flex-1">
+                        <label className="text-sm font-medium text-slate-700">
+                          Purchased From
+                        </label>
+                        <input
+                          required
+                          placeholder="Vendor / Customer"
+                          value={formData.attributes.purchasedFrom}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              attributes: {
+                                ...formData.attributes,
+                                purchasedFrom: e.target.value,
+                              },
+                            })
+                          }
+                          className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-1 flex-1">
+                        <label className="text-sm font-medium text-slate-700">
+                          Purchase Date
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={formData.attributes.purchaseDate}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              attributes: {
+                                ...formData.attributes,
+                                purchaseDate: e.target.value,
+                              },
+                            })
+                          }
+                          className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1 flex-1 pt-5">
                       <label className="text-sm font-medium text-slate-700">
-                        Purchased From
+                        Battery Health
                       </label>
                       <input
                         required
-                        placeholder="Vendor / Customer"
-                        value={formData.attributes.purchasedFrom}
+                        placeholder="Battery Health"
+                        value={formData.attributes.batteryHealth}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
                             attributes: {
                               ...formData.attributes,
-                              purchasedFrom: e.target.value,
+                              batteryHealth: e.target.value,
                             },
                           })
                         }
                         className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
                       />
                     </div>
-
-                    <div className="space-y-1 flex-1">
+                    <div className="space-y-1 pt-5">
                       <label className="text-sm font-medium text-slate-700">
-                        Purchase Date
+                        Address
                       </label>
-                      <input
-                        type="date"
-                        required
-                        value={formData.attributes.purchaseDate}
+                      <textarea
+                        rows={4}
+                        placeholder="Optional notes about condition, accessories, box, warranty..."
+                        value={formData.attributes.address}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
                             attributes: {
                               ...formData.attributes,
-                              purchaseDate: e.target.value,
+                              address: e.target.value,
                             },
                           })
                         }
@@ -629,6 +714,68 @@ const ProductDashboard = () => {
                     }
                     className="w-full px-4 py-2.5 bg-slate-50 border rounded-xl"
                   />
+                </div>
+
+                {formData.category.toLowerCase().includes("mobile") &&
+                  formData.attributes.availableImeis.length > 0 && (
+                    <div className=" rounded-xl">
+                      <div className="overflow-hidden border border-slate-200 rounded-lg">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
+                            <tr className="text-center">
+                              <th className="px-4 py-3">No</th>
+                              <th className="px-4 py-3">IMEI</th>
+                              <th className="px-4 py-3">Vendor</th>
+                              <th className="px-4 py-3">Payment Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {/* Mock Data - Map your real carts state here */}
+                            {formData.attributes.availableImeis.map(
+                              (imei: ImeiItem, i) => (
+                                <tr
+                                  key={i}
+                                  className={`hover:bg-slate-50 transition-colors text-center`}
+                                >
+                                  <td className="px-4 py-4">
+                                    <div
+                                      className={`font-mono px-2 py-1 rounded text-[12px] inline-block"}`}
+                                    >
+                                      {i + 1}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <div
+                                      className={`font-mono  px-2 py-1 rounded text-[12px] inline-block"}`}
+                                    >
+                                      {imei.imei}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <span className=" text-slate-800">
+                                      {imei.vendor}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-4 text-center">
+                                    <span className=" text-slate-800 ">
+                                      {imei.paymentStatus}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ),
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                <div className="flex justify-end">
+                  {formData.category.toLowerCase().includes("mobile") && (
+                    <AddImeiDialog
+                      onSubmit={getImeidDetails}
+                      initialData={formData.attributes.availableImeis}
+                    />
+                  )}
                 </div>
               </div>
 

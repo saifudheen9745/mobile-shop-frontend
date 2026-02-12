@@ -15,6 +15,7 @@ export interface ICartContent {
 
 export interface ICartProduct {
     _id: string;
+    imei?:string;
     name: string;
     quantity: number;
     sellingPrice: number;

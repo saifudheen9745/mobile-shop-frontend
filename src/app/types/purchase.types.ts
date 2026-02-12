@@ -28,6 +28,7 @@ export interface CreatePurchaseInput {
   products: {
     productId: string;
     quantity: number;
+    imei?:string
   }[];
   paymentMethod?: "CASH" | "UPI" | "CARD";
 }
